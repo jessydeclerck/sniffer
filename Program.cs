@@ -62,7 +62,7 @@ namespace sniffer
                 }
 
                 // Compile the filter
-                using (BerkeleyPacketFilter filter = communicator.CreateFilter("port 443"))
+                using (BerkeleyPacketFilter filter = communicator.CreateFilter("port 5555"))
                 {
                     // Set the filter
                     communicator.SetFilter(filter);
