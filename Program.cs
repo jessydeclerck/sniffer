@@ -52,7 +52,7 @@ namespace sniffer
                 selectedDevice.Open(2000,                                  // portion of the packet to capture
                                                                             // 65536 guarantees that the whole packet will be captured on all the link layers
                                     PacketDeviceOpenAttributes.NoCaptureLocal|PacketDeviceOpenAttributes.NoCaptureRemote, // promiscuous mode
-                                    500))                                  // read timeout
+                                    100))                                  // read timeout
             {
                 // Check the link layer. We support only Ethernet for simplicity.
                 if (communicator.DataLink.Kind != DataLinkKind.Ethernet)
@@ -71,7 +71,7 @@ namespace sniffer
                 Console.WriteLine("Listening on " + selectedDevice.Description + "...");
 
                 communicator.SetKernelBufferSize(10000000);
-                communicator.SetKernelMinimumBytesToCopy(1000);
+                communicator.SetKernelMinimumBytesToCopy(50);
                 // start the capture
                 communicator.ReceivePackets(0, PacketHandler);
             }
