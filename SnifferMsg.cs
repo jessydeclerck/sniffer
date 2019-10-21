@@ -2,11 +2,11 @@ using System;
 
 namespace sniffer
 {
-    public class SnifferResponse
+    public class SnifferMsg : StdoutMsg
     {
-        public SnifferResponse() { }
+        public SnifferMsg() { }
 
-        public SnifferResponse(String srcport, String payload)
+        public SnifferMsg(String srcport, String payload)
         {
             this.srcport = srcport;
             this.payload = payload;

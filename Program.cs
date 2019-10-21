@@ -17,7 +17,7 @@ namespace sniffer
 
             if (allDevices.Count == 0)
             {
-                Console.WriteLine("No interfaces found! Make sure WinPcap is installed.");
+                WriteStdout(new SnifferInformation("No interfaces found! Make sure WinPcap is installed."));
                 return;
             }
 
@@ -25,17 +25,16 @@ namespace sniffer
             for (int i = 0; i != allDevices.Count; ++i)
             {
                 LivePacketDevice device = allDevices[i];
-                Console.Write((i + 1) + ". " + device.Name);
                 if (device.Description != null)
-                    Console.WriteLine(" (" + device.Description + ")");
+                    WriteStdout(new InterfaceInfo((i + 1).ToString(), device.Name, device.Description));
                 else
-                    Console.WriteLine(" (No description available)");
+                    WriteStdout(new SnifferInformation("(No description available)"));
             }
 
             int deviceIndex = 0;
             do
             {
-                Console.WriteLine("Enter the interface number (1-" + allDevices.Count + "):");
+                WriteStdout(new StdinRequest("Enter the interface number (1-" + allDevices.Count + "):"));
                 string deviceIndexString = Console.ReadLine();
                 if (!int.TryParse(deviceIndexString, out deviceIndex) ||
                     deviceIndex < 1 || deviceIndex > allDevices.Count)
@@ -50,25 +49,25 @@ namespace sniffer
             // Open the device
             using (PacketCommunicator communicator =
                 selectedDevice.Open(2000,                                  // portion of the packet to capture
-                                                                            // 65536 guarantees that the whole packet will be captured on all the link layers
-                                    PacketDeviceOpenAttributes.NoCaptureLocal|PacketDeviceOpenAttributes.NoCaptureRemote, // promiscuous mode
+                                                                           // 65536 guarantees that the whole packet will be captured on all the link layers
+                                    PacketDeviceOpenAttributes.NoCaptureLocal | PacketDeviceOpenAttributes.NoCaptureRemote, // promiscuous mode
                                     100))                                  // read timeout
             {
                 // Check the link layer. We support only Ethernet for simplicity.
                 if (communicator.DataLink.Kind != DataLinkKind.Ethernet)
                 {
-                    Console.WriteLine("This program works only on Ethernet networks.");
+                    WriteStdout(new SnifferInformation("This program works only on Ethernet networks."));
                     return;
                 }
 
                 // Compile the filter
-                using (BerkeleyPacketFilter filter = communicator.CreateFilter("port 5555"))
+                using (BerkeleyPacketFilter filter = communicator.CreateFilter("port 443"))
                 {
                     // Set the filter
                     communicator.SetFilter(filter);
                 }
 
-                Console.WriteLine("Listening on " + selectedDevice.Description + "...");
+                WriteStdout(new Info("Listening on " + selectedDevice.Description + "..."));
 
                 communicator.SetKernelBufferSize(10000000);
                 communicator.SetKernelMinimumBytesToCopy(50);
@@ -86,8 +85,15 @@ namespace sniffer
             // print srcport and tcp payload in json format
             if (tcp.PayloadLength > 0)
             {
-                Console.WriteLine(JsonConvert.SerializeObject(new SnifferResponse(tcp.SourcePort.ToString(), tcp.Payload.ToHexadecimalString())));
+                WriteStdout(new SnifferMsg(tcp.SourcePort.ToString(), tcp.Payload.ToHexadecimalString()));
             }
         }
+
+        private static void WriteStdout(StdoutMsg msg)
+        {
+            msg.type = msg.GetType().ToString();
+            Console.WriteLine(JsonConvert.SerializeObject(msg));
+        }
+
     }
 }
